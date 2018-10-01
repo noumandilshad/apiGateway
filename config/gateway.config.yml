@@ -1,33 +1,195 @@
+https:
+  port: 9443
 http:
   port: 8080
-admin:
-  port: 9876
-  hostname: localhost
 apiEndpoints:
   api:
     host: localhost
-    paths: '/ip'
+    path: "/api/*"
+  callback: 
+    host: localhost
+    path: "/callback"
+  setCookie:
+    host: localhost
+    path: "/setCookie"
+  apiToken:
+    host: localhost
+    path: "/token"
+  auth:
+    host: localhost
+    path: "/auth"
+  signup:
+    host: localhost
+    paths: "/signup"
+  signin:
+    host: localhost
+    path: "/signin"
+  userinfo:
+    host: localhost
+    path: "/user"
+  authenticate:
+    host: localhost
+    path: "/auth"
+  jwtauth:
+    host: localhost
+    path: "/jwt"
+  jwtexternal:
+    host: localhost
+    path: "/jwtexternal"
+  jwtexternalfile:
+    host: localhost
+    path: "/jwtexternalfile"
 serviceEndpoints:
-  httpbin:
-    url: 'https://httpbin.org'
+  serviceApi:
+    url: "http://localhost:7001/"
+  serviceToken:
+    url: "http://localhost:7001/"
+  signup:
+    url: "http://localhost:3001/"
+  signin:
+    url: "http://localhost:3002/"
+  userinfo:
+    url: "http://localhost:3003/"
+  authenticate:
+    url: "http://localhost:3004/"
+  jwtauth:
+    url: "http://localhost:3003/"
+  auth:
+    url: "http://localhost:3002/"
+  jwtexternal:
+    url: "http://localhost:3002/"
+  jwtexternalfile:
+    url: "http://localhost:3002/"
 policies:
   - basic-auth
   - cors
   - expression
   - key-auth
+  - jwt
   - log
   - oauth2
   - proxy
   - rate-limit
+  - headers
+  - expression  
   - example
 pipelines:
-  default:
+  callback:
+    apiEndpoints:
+      - callback
+    policies: 
+      - jwt:
+          action:
+            jwtExtractor: query
+            jwtExtractorField: id_token
+            checkCredentialExistence: false
+            secretOrPublicKeyFile: "./keys/public.pem"
+      - example:
+  api:
     apiEndpoints:
       - api
     policies:
-    # Uncomment `key-auth:` when instructed to in the Getting Started guide.
-    # - key-auth:
+      - example:
+      - expression:
+        - action:
+            jscode: 'let cookie = req.headers["cookie"]; var result = cookie.match(new RegExp("tokenId" + "=([^;]+)")); result && (result = JSON.parse(result[1])); res.setHeader("Authorization", "Bearer "+result)'
+      - jwt: 
+          action:      
+            checkCredentialExistence: false
+            secretOrPublicKeyFile: "./keys/public.pem"
+      - proxy:
+         - action:
+              serviceEndpoint: serviceApi
+              changeOrigin: true 
+  signup:
+    apiEndpoints:
+      - signup
+    policies:
+      # Uncomment `key-auth:` when instructed to in the Getting Started guide.
+      # - key-auth:
       - proxy:
           - action:
-              serviceEndpoint: httpbin 
+              serviceEndpoint: signup
+              changeOrigin: true
+  signin:
+    apiEndpoints:
+      - signin
+    policies:
+      # Uncomment `key-auth:` when instructed to in the Getting Started guide.
+      # - key-auth:
+      - proxy:
+          - action:
+              serviceEndpoint: signin
+              changeOrigin: true
+  userinfo:
+    apiEndpoints:
+      - userinfo
+    policies:
+      # Uncomment `key-auth:` when instructed to in the Getting Started guide.
+      # - key-auth:
+      - proxy:
+          - action:
+              serviceEndpoint: userinfo
+              changeOrigin: true
+  authenticate:
+    apiEndpoints:
+      - authenticate
+    policies:
+      - oauth2:
+      - proxy:
+          - action:
+              serviceEndpoint: authenticate
+              changeOrigin: true
+  jwtauth:
+    apiEndpoints:
+      - jwtauth
+    policies:
+      - jwt:
+          action:
+            issuer: express-gateway
+            audience: someone
+            subject: something
+            secretOrPublicKey: thisismysecret
+            checkCredentialExistence: true
+            passThrough: true
+      - proxy:
+          - action:
+              serviceEndpoint: jwtauth
+              changeOrigin: true
+  auth:
+    apiEndpoints:
+      - auth
+    policies:
+      - example:
+          - action:
+              baseUrl: "http://localhost:3002"
+      - proxy:
+          - action:
+              serviceEndpoint: auth
+              changeOrigin: true
+  externaljwt:
+    apiEndpoints:
+      - jwtexternal
+    policies:
+      - jwt:
+          action:
+            checkCredentialExistence: false
+            secretOrPublicKey: "MySecretKey"
+      - example:
+      - proxy:
+          - action:
+              serviceEndpoint: jwtexternal
+              changeOrigin: true
+  jwtexternalfile:
+    apiEndpoints:
+      - jwtexternalfile
+    policies:
+      - jwt:
+          action:
+            checkCredentialExistence: false
+            secretOrPublicKeyFile: "./keys/public.pem"
+      - example:
+      - proxy:
+          - action:
+              serviceEndpoint: jwtexternalfile
               changeOrigin: true
