@@ -1,19 +1,19 @@
 https:
-  port: 9443
+  port: ${PORT}
 http:
-  port: 8080
+  port: ${PORT}
 apiEndpoints:
   api:
-    host: localhost
-    path: "/api/*"
+    host: '*'
+    paths: ['/api/', '/api/*']
   callback: 
-    host: localhost
+    host: '*'
     path: "/callback"
   setCookie:
-    host: localhost
+    host: '*'
     path: "/setCookie"
   apiToken:
-    host: localhost
+    host: '*'
     path: "/token"
   auth:
     host: localhost
@@ -41,7 +41,7 @@ apiEndpoints:
     path: "/jwtexternalfile"
 serviceEndpoints:
   serviceApi:
-    url: "http://localhost:7001/"
+    url: "https://wt-232e05370bd9bf0c6bc587ef4b338200-0.sandbox.auth0-extend.com/express/"
   serviceToken:
     url: "http://localhost:7001/"
   signup:
